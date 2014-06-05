@@ -306,6 +306,8 @@
 #define HAVE_smaxdf3 ((TARGET_HARD_FLOAT && TARGET_FPU_ARMV8 && TARGET_VFP_DOUBLE) && (TARGET_VFP_DOUBLE))
 #define HAVE_sminsf3 ((TARGET_HARD_FLOAT && TARGET_FPU_ARMV8 ) && (TARGET_VFP))
 #define HAVE_smindf3 ((TARGET_HARD_FLOAT && TARGET_FPU_ARMV8 && TARGET_VFP_DOUBLE) && (TARGET_VFP_DOUBLE))
+#define HAVE_set_fpscr (TARGET_VFP)
+#define HAVE_get_fpscr (TARGET_VFP)
 #define HAVE_tls_load_dot_plus_four (TARGET_THUMB2)
 #define HAVE_thumb2_zero_extendqisi2_v6 (TARGET_THUMB2 && arm_arch6)
 #define HAVE_thumb2_casesi_internal (TARGET_THUMB2 && !flag_pic)
@@ -1579,7 +1581,7 @@
 #define HAVE_return_addr_mask (TARGET_ARM)
 #define HAVE_untyped_call 1
 #define HAVE_untyped_return 1
-#define HAVE_casesi (TARGET_32BIT || optimize_size || flag_pic)
+#define HAVE_casesi (TARGET_32BIT || ((optimize_size || flag_pic) && !inline_thumb1_jump_table))
 #define HAVE_thumb1_casesi_internal_pic (TARGET_THUMB1)
 #define HAVE_indirect_jump 1
 #define HAVE_prologue 1
@@ -2654,6 +2656,8 @@ extern rtx        gen_smaxsf3                           (rtx, rtx, rtx);
 extern rtx        gen_smaxdf3                           (rtx, rtx, rtx);
 extern rtx        gen_sminsf3                           (rtx, rtx, rtx);
 extern rtx        gen_smindf3                           (rtx, rtx, rtx);
+extern rtx        gen_set_fpscr                         (rtx);
+extern rtx        gen_get_fpscr                         (rtx);
 extern rtx        gen_tls_load_dot_plus_four            (rtx, rtx, rtx, rtx);
 extern rtx        gen_thumb2_zero_extendqisi2_v6        (rtx, rtx);
 extern rtx        gen_thumb2_casesi_internal            (rtx, rtx, rtx, rtx);

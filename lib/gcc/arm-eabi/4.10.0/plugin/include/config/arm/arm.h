@@ -2006,10 +2006,11 @@ enum arm_auto_incmodes
 
 #define CASE_VECTOR_PC_RELATIVE (TARGET_THUMB2				\
 				 || (TARGET_THUMB1			\
+				     && !inline_thumb1_jump_table	\
 				     && (optimize_size || flag_pic)))
 
 #define CASE_VECTOR_SHORTEN_MODE(min, max, body)			\
-  (TARGET_THUMB1							\
+  (TARGET_THUMB1 && !inline_thumb1_jump_table				\
    ? (min >= 0 && max < 512						\
       ? (ADDR_DIFF_VEC_FLAGS (body).offset_unsigned = 1, QImode)	\
       : min >= -256 && max < 256					\
@@ -2395,5 +2396,5 @@ extern const char *host_detect_local_cpu (int argc, const char **argv);
 #endif
 
 #define DRIVER_SELF_SPECS MCPU_MTUNE_NATIVE_SPECS
-
+#define TARGET_SUPPORTS_WIDE_INT 1
 #endif /* ! GCC_ARM_H */

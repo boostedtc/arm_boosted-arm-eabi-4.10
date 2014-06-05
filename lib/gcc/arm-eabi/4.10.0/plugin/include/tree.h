@@ -3624,6 +3624,11 @@ extern tree build_call_valist (tree, tree, int, va_list);
    build_call_array_loc (UNKNOWN_LOCATION, T1, T2, N, T3)
 extern tree build_call_array_loc (location_t, tree, tree, int, const tree *);
 extern tree build_call_vec (tree, tree, vec<tree, va_gc> *);
+extern tree build_call_expr_loc_array (location_t, tree, int, tree *);
+extern tree build_call_expr_loc_vec (location_t, tree, vec<tree, va_gc> *);
+extern tree build_call_expr_loc (location_t, tree, int, ...);
+extern tree build_call_expr (tree, int, ...);
+extern tree build_string_literal (int, const char *);
 
 /* Construct various nodes representing data types.  */
 
@@ -3731,6 +3736,10 @@ extern tree merge_type_attributes (tree, tree);
    and you should never call it directly.  */
 extern tree private_lookup_attribute (const char *, size_t, tree);
 
+/* This function is a private implementation detail
+   of lookup_attribute_by_prefix() and you should never call it directly.  */
+extern tree private_lookup_attribute_by_prefix (const char *, size_t, tree);
+
 /* Given an attribute name ATTR_NAME and a list of attributes LIST,
    return a pointer to the attribute's list element if the attribute
    is part of the list, or NULL_TREE if not found.  If the attribute
@@ -3752,6 +3761,24 @@ lookup_attribute (const char *attr_name, tree list)
        will optimize the strlen() away.  */
     return private_lookup_attribute (attr_name, strlen (attr_name), list);
 }
+
+/* Given an attribute name ATTR_NAME and a list of attributes LIST,
+   return a pointer to the attribute's list first element if the attribute
+   starts with ATTR_NAME. ATTR_NAME must be in the form 'text' (not
+   '__text__').  */
+
+static inline tree
+lookup_attribute_by_prefix (const char *attr_name, tree list)
+{
+  gcc_checking_assert (attr_name[0] != '_');
+  /* In most cases, list is NULL_TREE.  */
+  if (list == NULL_TREE)
+    return NULL_TREE;
+  else
+    return private_lookup_attribute_by_prefix (attr_name, strlen (attr_name),
+					       list);
+}
+
 
 /* This function is a private implementation detail of
    is_attribute_p() and you should never call it directly.  */
@@ -4501,9 +4528,7 @@ static inline bool
 may_be_aliased (const_tree var)
 {
   return (TREE_CODE (var) != CONST_DECL
-	  && (TREE_PUBLIC (var)
-	      || DECL_EXTERNAL (var)
-	      || TREE_ADDRESSABLE (var))
+	  && TREE_ADDRESSABLE (var)
 	  && !((TREE_STATIC (var) || TREE_PUBLIC (var) || DECL_EXTERNAL (var))
 	       && ((TREE_READONLY (var)
 		    && !TYPE_NEEDS_CONSTRUCTING (TREE_TYPE (var)))
@@ -4744,47 +4769,5 @@ extern tree get_inner_reference (tree, HOST_WIDE_INT *, HOST_WIDE_INT *,
 /* Return a tree representing the lower bound of the array mentioned in
    EXP, an ARRAY_REF or an ARRAY_RANGE_REF.  */
 extern tree array_ref_low_bound (tree);
-
-/* In builtins.c.  */
-
-/* Non-zero if __builtin_constant_p should be folded right away.  */
-extern bool force_folding_builtin_constant_p;
-
-extern bool avoid_folding_inline_builtin (tree);
-extern tree fold_call_expr (location_t, tree, bool);
-extern tree fold_builtin_fputs (location_t, tree, tree, bool, bool, tree);
-extern tree fold_builtin_strcpy (location_t, tree, tree, tree, tree);
-extern tree fold_builtin_strncpy (location_t, tree, tree, tree, tree, tree);
-extern tree fold_builtin_strcat (location_t, tree, tree, tree);
-extern tree fold_builtin_memory_chk (location_t, tree, tree, tree, tree, tree, tree, bool,
-				     enum built_in_function);
-extern tree fold_builtin_stxcpy_chk (location_t, tree, tree, tree, tree, tree, bool,
-				     enum built_in_function);
-extern tree fold_builtin_stxncpy_chk (location_t, tree, tree, tree, tree, tree, bool,
-				      enum built_in_function);
-extern tree fold_builtin_expect (location_t, tree, tree, tree);
-extern bool fold_builtin_next_arg (tree, bool);
-extern enum built_in_function builtin_mathfn_code (const_tree);
-extern tree fold_builtin_call_array (location_t, tree, tree, int, tree *);
-extern tree build_call_expr_loc_array (location_t, tree, int, tree *);
-extern tree build_call_expr_loc_vec (location_t, tree, vec<tree, va_gc> *);
-extern tree build_call_expr_loc (location_t, tree, int, ...);
-extern tree build_call_expr (tree, int, ...);
-extern tree mathfn_built_in (tree, enum built_in_function fn);
-extern tree c_strlen (tree, int);
-extern tree build_string_literal (int, const char *);
-extern rtx builtin_memset_read_str (void *, HOST_WIDE_INT, enum machine_mode);
-extern bool is_builtin_fn (tree);
-extern bool get_object_alignment_1 (tree, unsigned int *,
-				    unsigned HOST_WIDE_INT *);
-extern unsigned int get_object_alignment (tree);
-extern bool get_pointer_alignment_1 (tree, unsigned int *,
-				     unsigned HOST_WIDE_INT *);
-extern unsigned int get_pointer_alignment (tree);
-extern tree fold_call_stmt (gimple, bool);
-extern tree gimple_fold_builtin_snprintf_chk (gimple, tree, enum built_in_function);
-extern void set_builtin_user_assembler_name (tree decl, const char *asmspec);
-extern bool is_simple_builtin (tree);
-extern bool is_inexpensive_builtin (tree);
 
 #endif  /* GCC_TREE_H  */

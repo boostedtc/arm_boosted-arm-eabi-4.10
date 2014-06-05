@@ -27208,7 +27208,6 @@ file.
 * Type Layout::         Defining sizes and properties of basic user data types.
 * Registers::           Naming and describing the hardware registers.
 * Register Classes::    Defining the classes of hardware registers.
-* Old Constraints::     The old way to define machine-specific constraints.
 * Stack and Calling::   Defining which way the stack grows and by how much.
 * Varargs::             Defining the varargs macros.
 * Trampolines::         Code set up at run time to enter a nested function.
@@ -28970,10 +28969,9 @@ Registers have various characteristics.
      If the usage of an entire class of registers depends on the target
      flags, you may indicate this to GCC by using this macro to modify
      'fixed_regs' and 'call_used_regs' to 1 for each of the registers in
-     the classes which should not be used by GCC.  Also define the macro
-     'REG_CLASS_FROM_LETTER' / 'REG_CLASS_FROM_CONSTRAINT' to return
-     'NO_REGS' if it is called with a letter for a class that shouldn't
-     be used.
+     the classes which should not be used by GCC.  Also make
+     'define_register_constraint's return 'NO_REGS' for constraints that
+     shouldn't be used.
 
      (However, if this class is not included in 'GENERAL_REGS' and all
      of the insn patterns whose constraints permit this class are
@@ -29312,7 +29310,7 @@ these macros.
      of the stack.
 
 
-File: gccint.info,  Node: Register Classes,  Next: Old Constraints,  Prev: Registers,  Up: Target Macros
+File: gccint.info,  Node: Register Classes,  Next: Stack and Calling,  Prev: Registers,  Up: Target Macros
 
 17.8 Register Classes
 =====================
@@ -29908,147 +29906,10 @@ return.
      expander patterns.
 
 
-File: gccint.info,  Node: Old Constraints,  Next: Stack and Calling,  Prev: Register Classes,  Up: Target Macros
+File: gccint.info,  Node: Stack and Calling,  Next: Varargs,  Prev: Register Classes,  Up: Target Macros
 
-17.9 Obsolete Macros for Defining Constraints
-=============================================
-
-Machine-specific constraints can be defined with these macros instead of
-the machine description constructs described in *note Define
-Constraints::.  This mechanism is obsolete.  New ports should not use
-it; old ports should convert to the new mechanism.
-
- -- Macro: CONSTRAINT_LEN (CHAR, STR)
-     For the constraint at the start of STR, which starts with the
-     letter C, return the length.  This allows you to have register
-     class / constant / extra constraints that are longer than a single
-     letter; you don't need to define this macro if you can do with
-     single-letter constraints only.  The definition of this macro
-     should use DEFAULT_CONSTRAINT_LEN for all the characters that you
-     don't want to handle specially.  There are some sanity checks in
-     genoutput.c that check the constraint lengths for the md file, so
-     you can also use this macro to help you while you are transitioning
-     from a byzantine single-letter-constraint scheme: when you return a
-     negative length for a constraint you want to re-use, genoutput will
-     complain about every instance where it is used in the md file.
-
- -- Macro: REG_CLASS_FROM_LETTER (CHAR)
-     A C expression which defines the machine-dependent operand
-     constraint letters for register classes.  If CHAR is such a letter,
-     the value should be the register class corresponding to it.
-     Otherwise, the value should be 'NO_REGS'.  The register letter 'r',
-     corresponding to class 'GENERAL_REGS', will not be passed to this
-     macro; you do not need to handle it.
-
- -- Macro: REG_CLASS_FROM_CONSTRAINT (CHAR, STR)
-     Like 'REG_CLASS_FROM_LETTER', but you also get the constraint
-     string passed in STR, so that you can use suffixes to distinguish
-     between different variants.
-
- -- Macro: CONST_OK_FOR_LETTER_P (VALUE, C)
-     A C expression that defines the machine-dependent operand
-     constraint letters ('I', 'J', 'K', ... 'P') that specify particular
-     ranges of integer values.  If C is one of those letters, the
-     expression should check that VALUE, an integer, is in the
-     appropriate range and return 1 if so, 0 otherwise.  If C is not one
-     of those letters, the value should be 0 regardless of VALUE.
-
- -- Macro: CONST_OK_FOR_CONSTRAINT_P (VALUE, C, STR)
-     Like 'CONST_OK_FOR_LETTER_P', but you also get the constraint
-     string passed in STR, so that you can use suffixes to distinguish
-     between different variants.
-
- -- Macro: CONST_DOUBLE_OK_FOR_LETTER_P (VALUE, C)
-     A C expression that defines the machine-dependent operand
-     constraint letters that specify particular ranges of 'const_double'
-     values ('G' or 'H').
-
-     If C is one of those letters, the expression should check that
-     VALUE, an RTX of code 'const_double', is in the appropriate range
-     and return 1 if so, 0 otherwise.  If C is not one of those letters,
-     the value should be 0 regardless of VALUE.
-
-     'const_double' is used for all floating-point constants and for
-     'DImode' fixed-point constants.  A given letter can accept either
-     or both kinds of values.  It can use 'GET_MODE' to distinguish
-     between these kinds.
-
- -- Macro: CONST_DOUBLE_OK_FOR_CONSTRAINT_P (VALUE, C, STR)
-     Like 'CONST_DOUBLE_OK_FOR_LETTER_P', but you also get the
-     constraint string passed in STR, so that you can use suffixes to
-     distinguish between different variants.
-
- -- Macro: EXTRA_CONSTRAINT (VALUE, C)
-     A C expression that defines the optional machine-dependent
-     constraint letters that can be used to segregate specific types of
-     operands, usually memory references, for the target machine.  Any
-     letter that is not elsewhere defined and not matched by
-     'REG_CLASS_FROM_LETTER' / 'REG_CLASS_FROM_CONSTRAINT' may be used.
-     Normally this macro will not be defined.
-
-     If it is required for a particular target machine, it should return
-     1 if VALUE corresponds to the operand type represented by the
-     constraint letter C.  If C is not defined as an extra constraint,
-     the value returned should be 0 regardless of VALUE.
-
-     For example, on the ROMP, load instructions cannot have their
-     output in r0 if the memory reference contains a symbolic address.
-     Constraint letter 'Q' is defined as representing a memory address
-     that does _not_ contain a symbolic address.  An alternative is
-     specified with a 'Q' constraint on the input and 'r' on the output.
-     The next alternative specifies 'm' on the input and a register
-     class that does not include r0 on the output.
-
- -- Macro: EXTRA_CONSTRAINT_STR (VALUE, C, STR)
-     Like 'EXTRA_CONSTRAINT', but you also get the constraint string
-     passed in STR, so that you can use suffixes to distinguish between
-     different variants.
-
- -- Macro: EXTRA_MEMORY_CONSTRAINT (C, STR)
-     A C expression that defines the optional machine-dependent
-     constraint letters, amongst those accepted by 'EXTRA_CONSTRAINT',
-     that should be treated like memory constraints by the reload pass.
-
-     It should return 1 if the operand type represented by the
-     constraint at the start of STR, the first letter of which is the
-     letter C, comprises a subset of all memory references including all
-     those whose address is simply a base register.  This allows the
-     reload pass to reload an operand, if it does not directly
-     correspond to the operand type of C, by copying its address into a
-     base register.
-
-     For example, on the S/390, some instructions do not accept
-     arbitrary memory references, but only those that do not make use of
-     an index register.  The constraint letter 'Q' is defined via
-     'EXTRA_CONSTRAINT' as representing a memory address of this type.
-     If the letter 'Q' is marked as 'EXTRA_MEMORY_CONSTRAINT', a 'Q'
-     constraint can handle any memory operand, because the reload pass
-     knows it can be reloaded by copying the memory address into a base
-     register if required.  This is analogous to the way an 'o'
-     constraint can handle any memory operand.
-
- -- Macro: EXTRA_ADDRESS_CONSTRAINT (C, STR)
-     A C expression that defines the optional machine-dependent
-     constraint letters, amongst those accepted by 'EXTRA_CONSTRAINT' /
-     'EXTRA_CONSTRAINT_STR', that should be treated like address
-     constraints by the reload pass.
-
-     It should return 1 if the operand type represented by the
-     constraint at the start of STR, which starts with the letter C,
-     comprises a subset of all memory addresses including all those that
-     consist of just a base register.  This allows the reload pass to
-     reload an operand, if it does not directly correspond to the
-     operand type of STR, by copying it into a base register.
-
-     Any constraint marked as 'EXTRA_ADDRESS_CONSTRAINT' can only be
-     used with the 'address_operand' predicate.  It is treated
-     analogously to the 'p' constraint.
-
-
-File: gccint.info,  Node: Stack and Calling,  Next: Varargs,  Prev: Old Constraints,  Up: Target Macros
-
-17.10 Stack Layout and Calling Conventions
-==========================================
+17.9 Stack Layout and Calling Conventions
+=========================================
 
 This describes the stack layout and calling conventions.
 
@@ -30073,8 +29934,8 @@ This describes the stack layout and calling conventions.
 
 File: gccint.info,  Node: Frame Layout,  Next: Exception Handling,  Up: Stack and Calling
 
-17.10.1 Basic Stack Layout
---------------------------
+17.9.1 Basic Stack Layout
+-------------------------
 
 Here is the basic stack layout.
 
@@ -30304,8 +30165,8 @@ Here is the basic stack layout.
 
 File: gccint.info,  Node: Exception Handling,  Next: Stack Checking,  Prev: Frame Layout,  Up: Stack and Calling
 
-17.10.2 Exception Handling Support
-----------------------------------
+17.9.2 Exception Handling Support
+---------------------------------
 
  -- Macro: EH_RETURN_DATA_REGNO (N)
      A C expression whose value is the Nth register number used for data
@@ -30432,8 +30293,8 @@ File: gccint.info,  Node: Exception Handling,  Next: Stack Checking,  Prev: Fram
 
 File: gccint.info,  Node: Stack Checking,  Next: Frame Registers,  Prev: Exception Handling,  Up: Stack and Calling
 
-17.10.3 Specifying How Stack Checking is Done
----------------------------------------------
+17.9.3 Specifying How Stack Checking is Done
+--------------------------------------------
 
 GCC will check that stack references are within the boundaries of the
 stack, if the option '-fstack-check' is specified, in one of three ways:
@@ -30528,8 +30389,8 @@ in the opposite case.
 
 File: gccint.info,  Node: Frame Registers,  Next: Elimination,  Prev: Stack Checking,  Up: Stack and Calling
 
-17.10.4 Registers That Address the Stack Frame
-----------------------------------------------
+17.9.4 Registers That Address the Stack Frame
+---------------------------------------------
 
 This discusses registers that address the stack frame.
 
@@ -30700,8 +30561,8 @@ This discusses registers that address the stack frame.
 
 File: gccint.info,  Node: Elimination,  Next: Stack Arguments,  Prev: Frame Registers,  Up: Stack and Calling
 
-17.10.5 Eliminating Frame Pointer and Arg Pointer
--------------------------------------------------
+17.9.5 Eliminating Frame Pointer and Arg Pointer
+------------------------------------------------
 
 This is about eliminating the frame pointer and arg pointer.
 
@@ -30790,8 +30651,8 @@ This is about eliminating the frame pointer and arg pointer.
 
 File: gccint.info,  Node: Stack Arguments,  Next: Register Arguments,  Prev: Elimination,  Up: Stack and Calling
 
-17.10.6 Passing Function Arguments on the Stack
------------------------------------------------
+17.9.6 Passing Function Arguments on the Stack
+----------------------------------------------
 
 The macros in this section control how arguments are passed on the
 stack.  See the following section for other macros that control passing
@@ -30936,8 +30797,8 @@ certain arguments in registers.
 
 File: gccint.info,  Node: Register Arguments,  Next: Scalar Return,  Prev: Stack Arguments,  Up: Stack and Calling
 
-17.10.7 Passing Arguments in Registers
---------------------------------------
+17.9.7 Passing Arguments in Registers
+-------------------------------------
 
 This section describes the macros which let you control how various
 types of arguments are passed in registers or how they are arranged in
@@ -31332,8 +31193,8 @@ the stack.
 
 File: gccint.info,  Node: Scalar Return,  Next: Aggregate Return,  Prev: Register Arguments,  Up: Stack and Calling
 
-17.10.8 How Scalar Function Values Are Returned
------------------------------------------------
+17.9.8 How Scalar Function Values Are Returned
+----------------------------------------------
 
 This section discusses the macros that control returning scalars as
 values--values that can fit in registers.
@@ -31461,8 +31322,8 @@ values--values that can fit in registers.
 
 File: gccint.info,  Node: Aggregate Return,  Next: Caller Saves,  Prev: Scalar Return,  Up: Stack and Calling
 
-17.10.9 How Large Values Are Returned
--------------------------------------
+17.9.9 How Large Values Are Returned
+------------------------------------
 
 When a function value's mode is 'BLKmode' (and in some other cases), the
 value is not returned according to 'TARGET_FUNCTION_VALUE' (*note Scalar
@@ -31548,8 +31409,8 @@ memory.
 
 File: gccint.info,  Node: Caller Saves,  Next: Function Entry,  Prev: Aggregate Return,  Up: Stack and Calling
 
-17.10.10 Caller-Saves Register Allocation
------------------------------------------
+17.9.10 Caller-Saves Register Allocation
+----------------------------------------
 
 If you enable it, GCC can save registers around function calls.  This
 makes it possible to use call-clobbered registers to hold variables that
@@ -31574,8 +31435,8 @@ must live across calls.
 
 File: gccint.info,  Node: Function Entry,  Next: Profiling,  Prev: Caller Saves,  Up: Stack and Calling
 
-17.10.11 Function Entry and Exit
---------------------------------
+17.9.11 Function Entry and Exit
+-------------------------------
 
 This section describes the macros that output function entry
 ("prologue") and exit ("epilogue") code.
@@ -31785,8 +31646,8 @@ This section describes the macros that output function entry
 
 File: gccint.info,  Node: Profiling,  Next: Tail Calls,  Prev: Function Entry,  Up: Stack and Calling
 
-17.10.12 Generating Code for Profiling
---------------------------------------
+17.9.12 Generating Code for Profiling
+-------------------------------------
 
 These macros will help you generate code for profiling.
 
@@ -31831,8 +31692,8 @@ These macros will help you generate code for profiling.
 
 File: gccint.info,  Node: Tail Calls,  Next: Stack Smashing Protection,  Prev: Profiling,  Up: Stack and Calling
 
-17.10.13 Permitting tail calls
-------------------------------
+17.9.13 Permitting tail calls
+-----------------------------
 
  -- Target Hook: bool TARGET_FUNCTION_OK_FOR_SIBCALL (tree DECL, tree
           EXP)
@@ -31872,8 +31733,8 @@ File: gccint.info,  Node: Tail Calls,  Next: Stack Smashing Protection,  Prev: P
 
 File: gccint.info,  Node: Stack Smashing Protection,  Next: Miscellaneous Register Hooks,  Prev: Tail Calls,  Up: Stack and Calling
 
-17.10.14 Stack smashing protection
-----------------------------------
+17.9.14 Stack smashing protection
+---------------------------------
 
  -- Target Hook: tree TARGET_STACK_PROTECT_GUARD (void)
      This hook returns a 'DECL' node for the external variable to use
@@ -31906,8 +31767,8 @@ File: gccint.info,  Node: Stack Smashing Protection,  Next: Miscellaneous Regist
 
 File: gccint.info,  Node: Miscellaneous Register Hooks,  Prev: Stack Smashing Protection,  Up: Stack and Calling
 
-17.10.15 Miscellaneous register hooks
--------------------------------------
+17.9.15 Miscellaneous register hooks
+------------------------------------
 
  -- Target Hook: bool TARGET_CALL_FUSAGE_CONTAINS_NON_CALLEE_CLOBBERS
      set to true if all the calls in the current function contain
@@ -31924,7 +31785,7 @@ File: gccint.info,  Node: Miscellaneous Register Hooks,  Prev: Stack Smashing Pr
 
 File: gccint.info,  Node: Varargs,  Next: Trampolines,  Prev: Stack and Calling,  Up: Target Macros
 
-17.11 Implementing the Varargs Macros
+17.10 Implementing the Varargs Macros
 =====================================
 
 GCC comes with an implementation of '<varargs.h>' and '<stdarg.h>' that
@@ -32056,7 +31917,7 @@ below.
 
 File: gccint.info,  Node: Trampolines,  Next: Library Calls,  Prev: Varargs,  Up: Target Macros
 
-17.12 Trampolines for Nested Functions
+17.11 Trampolines for Nested Functions
 ======================================
 
 A "trampoline" is a small piece of code that is created at run time when
@@ -32179,7 +32040,7 @@ its cache line.  Look in 'm68k.h' as a guide.
 
 File: gccint.info,  Node: Library Calls,  Next: Addressing Modes,  Prev: Trampolines,  Up: Target Macros
 
-17.13 Implicit Calls to Library Routines
+17.12 Implicit Calls to Library Routines
 ========================================
 
 Here is an explanation of implicit calls to library routines.
@@ -32277,7 +32138,7 @@ Here is an explanation of implicit calls to library routines.
 
 File: gccint.info,  Node: Addressing Modes,  Next: Anchored Addresses,  Prev: Library Calls,  Up: Target Macros
 
-17.14 Addressing Modes
+17.13 Addressing Modes
 ======================
 
 This is about addressing modes.
@@ -32700,7 +32561,7 @@ This is about addressing modes.
 
 File: gccint.info,  Node: Anchored Addresses,  Next: Condition Code,  Prev: Addressing Modes,  Up: Target Macros
 
-17.15 Anchored Addresses
+17.14 Anchored Addresses
 ========================
 
 GCC usually addresses every static object as a separate entity.  For
@@ -32762,7 +32623,7 @@ anchors at all unless either 'TARGET_MIN_ANCHOR_OFFSET' or
 
 File: gccint.info,  Node: Condition Code,  Next: Costs,  Prev: Anchored Addresses,  Up: Target Macros
 
-17.16 Condition Code Status
+17.15 Condition Code Status
 ===========================
 
 The macros in this section can be split in two families, according to
@@ -32810,7 +32671,7 @@ interested in most macros in this section.
 
 File: gccint.info,  Node: CC0 Condition Codes,  Next: MODE_CC Condition Codes,  Up: Condition Code
 
-17.16.1 Representation of condition codes using '(cc0)'
+17.15.1 Representation of condition codes using '(cc0)'
 -------------------------------------------------------
 
 The file 'conditions.h' defines a variable 'cc_status' to describe how
@@ -32875,7 +32736,7 @@ machine-specific information by defining 'CC_STATUS_MDEP'.
 
 File: gccint.info,  Node: MODE_CC Condition Codes,  Prev: CC0 Condition Codes,  Up: Condition Code
 
-17.16.2 Representation of condition codes using registers
+17.15.2 Representation of condition codes using registers
 ---------------------------------------------------------
 
  -- Macro: SELECT_CC_MODE (OP, X, Y)
@@ -33006,7 +32867,7 @@ File: gccint.info,  Node: MODE_CC Condition Codes,  Prev: CC0 Condition Codes,  
 
 File: gccint.info,  Node: Costs,  Next: Scheduling,  Prev: Condition Code,  Up: Target Macros
 
-17.17 Describing Relative Costs of Operations
+17.16 Describing Relative Costs of Operations
 =============================================
 
 These macros let you describe the relative speed of various operations
@@ -33342,7 +33203,7 @@ ordinarily expect.
 
 File: gccint.info,  Node: Scheduling,  Next: Sections,  Prev: Costs,  Up: Target Macros
 
-17.18 Adjusting the Instruction Scheduler
+17.17 Adjusting the Instruction Scheduler
 =========================================
 
 The instruction scheduler may need a fair amount of machine-specific
@@ -33720,7 +33581,7 @@ them: try the first ones in this list first.
 
 File: gccint.info,  Node: Sections,  Next: PIC,  Prev: Scheduling,  Up: Target Macros
 
-17.19 Dividing the Output into Sections (Texts, Data, ...)
+17.18 Dividing the Output into Sections (Texts, Data, ...)
 ==========================================================
 
 An object file is divided into sections containing different types of
@@ -34041,7 +33902,7 @@ target does not provide them.
 
 File: gccint.info,  Node: PIC,  Next: Assembler Format,  Prev: Sections,  Up: Target Macros
 
-17.20 Position Independent Code
+17.19 Position Independent Code
 ===============================
 
 This section describes macros that help implement generation of position
@@ -34081,7 +33942,7 @@ statements so that they use relative addresses.
 
 File: gccint.info,  Node: Assembler Format,  Next: Debugging Info,  Prev: PIC,  Up: Target Macros
 
-17.21 Defining the Output Assembler Language
+17.20 Defining the Output Assembler Language
 ============================================
 
 This section describes macros whose principal purpose is to describe how
@@ -34107,7 +33968,7 @@ instructions do.
 
 File: gccint.info,  Node: File Framework,  Next: Data Output,  Up: Assembler Format
 
-17.21.1 The Overall Framework of an Assembler File
+17.20.1 The Overall Framework of an Assembler File
 --------------------------------------------------
 
 This describes the overall framework of an assembly file.
@@ -34319,7 +34180,7 @@ This describes the overall framework of an assembly file.
 
 File: gccint.info,  Node: Data Output,  Next: Uninitialized Data,  Prev: File Framework,  Up: Assembler Format
 
-17.21.2 Output of Data
+17.20.2 Output of Data
 ----------------------
 
  -- Target Hook: const char * TARGET_ASM_BYTE_OP
@@ -34478,7 +34339,7 @@ File: gccint.info,  Node: Data Output,  Next: Uninitialized Data,  Prev: File Fr
 
 File: gccint.info,  Node: Uninitialized Data,  Next: Label Output,  Prev: Data Output,  Up: Assembler Format
 
-17.21.3 Output of Uninitialized Variables
+17.20.3 Output of Uninitialized Variables
 -----------------------------------------
 
 Each of the macros in this section is used to do the whole job of
@@ -34576,7 +34437,7 @@ outputting a single uninitialized variable.
 
 File: gccint.info,  Node: Label Output,  Next: Initialization,  Prev: Uninitialized Data,  Up: Assembler Format
 
-17.21.4 Output and Generation of Labels
+17.20.4 Output and Generation of Labels
 ---------------------------------------
 
 This is about outputting labels.
@@ -35049,7 +34910,7 @@ This is about outputting labels.
 
 File: gccint.info,  Node: Initialization,  Next: Macros for Initialization,  Prev: Label Output,  Up: Assembler Format
 
-17.21.5 How Initialization Functions Are Handled
+17.20.5 How Initialization Functions Are Handled
 ------------------------------------------------
 
 The compiled code for certain languages includes "constructors" (also
@@ -35164,7 +35025,7 @@ customize the handling of initialization and termination functions.
 
 File: gccint.info,  Node: Macros for Initialization,  Next: Instruction Output,  Prev: Initialization,  Up: Assembler Format
 
-17.21.6 Macros Controlling Initialization Routines
+17.20.6 Macros Controlling Initialization Routines
 --------------------------------------------------
 
 Here are the macros that control how the compiler handles initialization
@@ -35305,7 +35166,7 @@ termination functions in shared libraries:
 
 File: gccint.info,  Node: Instruction Output,  Next: Dispatch Tables,  Prev: Macros for Initialization,  Up: Assembler Format
 
-17.21.7 Output of Assembler Instructions
+17.20.7 Output of Assembler Instructions
 ----------------------------------------
 
 This describes assembler instruction output.
@@ -35516,7 +35377,7 @@ otherwise it contains the 'sequence' rtx being output.
 
 File: gccint.info,  Node: Dispatch Tables,  Next: Exception Region Output,  Prev: Instruction Output,  Up: Assembler Format
 
-17.21.8 Output of Dispatch Tables
+17.20.8 Output of Dispatch Tables
 ---------------------------------
 
 This concerns dispatch tables.
@@ -35613,7 +35474,7 @@ This concerns dispatch tables.
 
 File: gccint.info,  Node: Exception Region Output,  Next: Alignment Output,  Prev: Dispatch Tables,  Up: Assembler Format
 
-17.21.9 Assembler Commands for Exception Regions
+17.20.9 Assembler Commands for Exception Regions
 ------------------------------------------------
 
 This describes commands marking the start and the end of an exception
@@ -35746,7 +35607,7 @@ region.
 
 File: gccint.info,  Node: Alignment Output,  Prev: Exception Region Output,  Up: Assembler Format
 
-17.21.10 Assembler Commands for Alignment
+17.20.10 Assembler Commands for Alignment
 -----------------------------------------
 
 This describes commands for alignment.
@@ -35847,7 +35708,7 @@ This describes commands for alignment.
 
 File: gccint.info,  Node: Debugging Info,  Next: Floating Point,  Prev: Assembler Format,  Up: Target Macros
 
-17.22 Controlling Debugging Information Format
+17.21 Controlling Debugging Information Format
 ==============================================
 
 This describes how to specify debugging information.
@@ -35864,7 +35725,7 @@ This describes how to specify debugging information.
 
 File: gccint.info,  Node: All Debuggers,  Next: DBX Options,  Up: Debugging Info
 
-17.22.1 Macros Affecting All Debugging Formats
+17.21.1 Macros Affecting All Debugging Formats
 ----------------------------------------------
 
 These macros affect all debugging formats.
@@ -35923,7 +35784,7 @@ These macros affect all debugging formats.
 
 File: gccint.info,  Node: DBX Options,  Next: DBX Hooks,  Prev: All Debuggers,  Up: Debugging Info
 
-17.22.2 Specific Options for DBX Output
+17.21.2 Specific Options for DBX Output
 ---------------------------------------
 
 These are specific options for DBX output.
@@ -36043,7 +35904,7 @@ These are specific options for DBX output.
 
 File: gccint.info,  Node: DBX Hooks,  Next: File Names and DBX,  Prev: DBX Options,  Up: Debugging Info
 
-17.22.3 Open-Ended Hooks for DBX Format
+17.21.3 Open-Ended Hooks for DBX Format
 ---------------------------------------
 
 These are hooks for DBX format.
@@ -36073,7 +35934,7 @@ These are hooks for DBX format.
 
 File: gccint.info,  Node: File Names and DBX,  Next: SDB and DWARF,  Prev: DBX Hooks,  Up: Debugging Info
 
-17.22.4 File Names in DBX Format
+17.21.4 File Names in DBX Format
 --------------------------------
 
 This describes file names in DBX format.
@@ -36120,7 +35981,7 @@ This describes file names in DBX format.
 
 File: gccint.info,  Node: SDB and DWARF,  Next: VMS Debug,  Prev: File Names and DBX,  Up: Debugging Info
 
-17.22.5 Macros for SDB and DWARF Output
+17.21.5 Macros for SDB and DWARF Output
 ---------------------------------------
 
 Here are macros for SDB and DWARF output.
@@ -36253,7 +36114,7 @@ Here are macros for SDB and DWARF output.
 
 File: gccint.info,  Node: VMS Debug,  Prev: SDB and DWARF,  Up: Debugging Info
 
-17.22.6 Macros for VMS Debug Format
+17.21.6 Macros for VMS Debug Format
 -----------------------------------
 
 Here are macros for VMS debug format.
@@ -36269,7 +36130,7 @@ Here are macros for VMS debug format.
 
 File: gccint.info,  Node: Floating Point,  Next: Mode Switching,  Prev: Debugging Info,  Up: Target Macros
 
-17.23 Cross Compilation and Floating Point
+17.22 Cross Compilation and Floating Point
 ==========================================
 
 While all modern machines use twos-complement representation for
@@ -36353,7 +36214,7 @@ more than once, so operands must not have side effects.
 
 File: gccint.info,  Node: Mode Switching,  Next: Target Attributes,  Prev: Floating Point,  Up: Target Macros
 
-17.24 Mode Switching Instructions
+17.23 Mode Switching Instructions
 =================================
 
 The following macros control mode switching optimizations:
@@ -36438,7 +36299,7 @@ The following macros control mode switching optimizations:
 
 File: gccint.info,  Node: Target Attributes,  Next: Emulated TLS,  Prev: Mode Switching,  Up: Target Macros
 
-17.25 Defining target-specific uses of '__attribute__'
+17.24 Defining target-specific uses of '__attribute__'
 ======================================================
 
 Target-specific attributes may be defined for functions, data and types.
@@ -36604,7 +36465,7 @@ be documented in 'extend.texi'.
 
 File: gccint.info,  Node: Emulated TLS,  Next: MIPS Coprocessors,  Prev: Target Attributes,  Up: Target Macros
 
-17.26 Emulating TLS
+17.25 Emulating TLS
 ===================
 
 For targets whose psABI does not provide Thread Local Storage via
@@ -36675,7 +36536,7 @@ the current thread's instance of the TLS object.
 
 File: gccint.info,  Node: MIPS Coprocessors,  Next: PCH Target,  Prev: Emulated TLS,  Up: Target Macros
 
-17.27 Defining coprocessor specifics for MIPS targets.
+17.26 Defining coprocessor specifics for MIPS targets.
 ======================================================
 
 The MIPS specification allows MIPS implementations to have as many as 4
@@ -36703,7 +36564,7 @@ floating-point support; they are not included in this mechanism.
 
 File: gccint.info,  Node: PCH Target,  Next: C++ ABI,  Prev: MIPS Coprocessors,  Up: Target Macros
 
-17.28 Parameters for Precompiled Header Validity Checking
+17.27 Parameters for Precompiled Header Validity Checking
 =========================================================
 
  -- Target Hook: void * TARGET_GET_PCH_VALIDITY (size_t *SZ)
@@ -36743,7 +36604,7 @@ File: gccint.info,  Node: PCH Target,  Next: C++ ABI,  Prev: MIPS Coprocessors, 
 
 File: gccint.info,  Node: C++ ABI,  Next: Named Address Spaces,  Prev: PCH Target,  Up: Target Macros
 
-17.29 C++ ABI parameters
+17.28 C++ ABI parameters
 ========================
 
  -- Target Hook: tree TARGET_CXX_GUARD_TYPE (void)
@@ -36838,7 +36699,7 @@ File: gccint.info,  Node: C++ ABI,  Next: Named Address Spaces,  Prev: PCH Targe
 
 File: gccint.info,  Node: Named Address Spaces,  Next: Misc,  Prev: C++ ABI,  Up: Target Macros
 
-17.30 Adding support for named address spaces
+17.29 Adding support for named address spaces
 =============================================
 
 The draft technical report of the ISO/IEC JTC1 S22 WG14 N1275 standards
@@ -36933,7 +36794,7 @@ keyword for named address space #1:
 
 File: gccint.info,  Node: Misc,  Prev: Named Address Spaces,  Up: Target Macros
 
-17.31 Miscellaneous Parameters
+17.30 Miscellaneous Parameters
 ==============================
 
 Here are several miscellaneous parameters.
@@ -46656,12 +46517,10 @@ Concept Index
 * constraint, matching:                  Simple Constraints. (line  140)
 * constraints:                           Constraints.        (line    6)
 * constraints, defining:                 Define Constraints. (line    6)
-* constraints, defining, obsolete method: Old Constraints.   (line    6)
 * constraints, machine specific:         Machine Constraints.
                                                              (line    6)
 * constraints, testing:                  C Constraint Interface.
                                                              (line    6)
-* CONSTRAINT_LEN:                        Old Constraints.    (line   11)
 * constraint_num:                        C Constraint Interface.
                                                              (line   37)
 * constraint_satisfied_p:                C Constraint Interface.
@@ -46674,8 +46533,6 @@ Concept Index
 * const_double:                          Constants.          (line   37)
 * 'const_double', RTL sharing:           Sharing.            (line   29)
 * CONST_DOUBLE_LOW:                      Constants.          (line   54)
-* CONST_DOUBLE_OK_FOR_CONSTRAINT_P:      Old Constraints.    (line   66)
-* CONST_DOUBLE_OK_FOR_LETTER_P:          Old Constraints.    (line   51)
 * const_double_operand:                  Machine-Independent Predicates.
                                                              (line   20)
 * const_fixed:                           Constants.          (line   93)
@@ -46685,8 +46542,6 @@ Concept Index
 * 'const_int', RTL sharing:              Sharing.            (line   23)
 * const_int_operand:                     Machine-Independent Predicates.
                                                              (line   15)
-* CONST_OK_FOR_CONSTRAINT_P:             Old Constraints.    (line   46)
-* CONST_OK_FOR_LETTER_P:                 Old Constraints.    (line   38)
 * const_string:                          Constants.          (line  112)
 * 'const_string' and attributes:         Expressions.        (line   20)
 * const_true_rtx:                        Constants.          (line   31)
@@ -46927,7 +46782,6 @@ Concept Index
 * defining attributes and their values:  Defining Attributes.
                                                              (line    6)
 * defining constraints:                  Define Constraints. (line    6)
-* defining constraints, obsolete method: Old Constraints.    (line    6)
 * defining jump instruction patterns:    Jump Patterns.      (line    6)
 * defining looping instruction patterns: Looping Patterns.   (line    6)
 * defining peephole optimizers:          Peephole Definitions.
@@ -47087,10 +46941,6 @@ Concept Index
 * EXPR_STMT_EXPR:                        Statements for C++. (line    6)
 * 'extendMN2' instruction pattern:       Standard Names.     (line  921)
 * extensible constraints:                Simple Constraints. (line  171)
-* EXTRA_ADDRESS_CONSTRAINT:              Old Constraints.    (line  120)
-* EXTRA_CONSTRAINT:                      Old Constraints.    (line   71)
-* EXTRA_CONSTRAINT_STR:                  Old Constraints.    (line   92)
-* EXTRA_MEMORY_CONSTRAINT:               Old Constraints.    (line   97)
 * EXTRA_SPECS:                           Driver.             (line  182)
 * 'extv' instruction pattern:            Standard Names.     (line 1012)
 * 'extvM' instruction pattern:           Standard Names.     (line  957)
@@ -47879,7 +47729,7 @@ Concept Index
 * INCLUDE_DEFAULTS:                      Driver.             (line  327)
 * inclusive-or, bitwise:                 Arithmetic.         (line  164)
 * INCOMING_FRAME_SP_OFFSET:              Frame Layout.       (line  181)
-* INCOMING_REGNO:                        Register Basics.    (line   87)
+* INCOMING_REGNO:                        Register Basics.    (line   86)
 * INCOMING_RETURN_ADDR_RTX:              Frame Layout.       (line  137)
 * INCOMING_STACK_BOUNDARY:               Storage Layout.     (line  154)
 * INDEX_REG_CLASS:                       Register Classes.   (line  140)
@@ -48107,7 +47957,7 @@ Concept Index
 * LOCAL_DECL_ALIGNMENT:                  Storage Layout.     (line  286)
 * LOCAL_INCLUDE_DIR:                     Driver.             (line  312)
 * LOCAL_LABEL_PREFIX:                    Instruction Output. (line  151)
-* LOCAL_REGNO:                           Register Basics.    (line  101)
+* LOCAL_REGNO:                           Register Basics.    (line  100)
 * Logical Operators:                     Logical Operators.  (line    6)
 * logical-and, bitwise:                  Arithmetic.         (line  159)
 * LOGICAL_OP_NON_SHORT_CIRCUIT:          Costs.              (line  264)
@@ -48484,7 +48334,7 @@ Concept Index
 * ORIGINAL_REGNO:                        Special Accessors.  (line   53)
 * other register constraints:            Simple Constraints. (line  171)
 * outgoing_args_size:                    Stack Arguments.    (line   48)
-* OUTGOING_REGNO:                        Register Basics.    (line   94)
+* OUTGOING_REGNO:                        Register Basics.    (line   93)
 * OUTGOING_REG_PARM_STACK_SPACE:         Stack Arguments.    (line   73)
 * output of assembler code:              File Framework.     (line    6)
 * output statements:                     Output Statement.   (line    6)
@@ -48525,7 +48375,7 @@ Concept Index
 * 'pc', RTL sharing:                     Sharing.            (line   25)
 * PCC_BITFIELD_TYPE_MATTERS:             Storage Layout.     (line  325)
 * PCC_STATIC_STRUCT_RETURN:              Aggregate Return.   (line   64)
-* PC_REGNUM:                             Register Basics.    (line  108)
+* PC_REGNUM:                             Register Basics.    (line  107)
 * pc_rtx:                                Regs and Memory.    (line  362)
 * PDImode:                               Machine Modes.      (line   40)
 * peephole optimization, RTL representation: Side Effects.   (line  243)
@@ -48750,8 +48600,6 @@ Concept Index
 * REG_CC_USER:                           Insns.              (line  491)
 * reg_class_contents:                    Register Basics.    (line   59)
 * REG_CLASS_CONTENTS:                    Register Classes.   (line   91)
-* REG_CLASS_FROM_CONSTRAINT:             Old Constraints.    (line   33)
-* REG_CLASS_FROM_LETTER:                 Old Constraints.    (line   25)
 * REG_CLASS_NAMES:                       Register Classes.   (line   86)
 * REG_CROSSING_JUMP:                     Insns.              (line  405)
 * REG_DEAD:                              Insns.              (line  357)
@@ -50403,118 +50251,117 @@ Node: Code Iterators1141232
 Node: Int Iterators1143511
 Node: Subst Iterators1145957
 Node: Target Macros1147649
-Node: Target Structure1150737
-Node: Driver1152853
-Node: Run-time Target1171665
-Node: Per-Function Data1181376
-Node: Storage Layout1184140
-Node: Type Layout1210376
-Node: Registers1225699
-Node: Register Basics1226673
-Node: Allocation Order1232181
-Node: Values in Registers1234665
-Node: Leaf Functions1242143
-Node: Stack Registers1245002
-Node: Register Classes1246274
-Node: Old Constraints1277218
-Node: Stack and Calling1284358
-Node: Frame Layout1284925
-Node: Exception Handling1295801
-Node: Stack Checking1302013
-Node: Frame Registers1306827
-Node: Elimination1315086
-Node: Stack Arguments1319316
-Node: Register Arguments1326179
-Node: Scalar Return1346480
-Node: Aggregate Return1352567
-Node: Caller Saves1356778
-Node: Function Entry1357955
-Node: Profiling1369049
-Node: Tail Calls1371161
-Node: Stack Smashing Protection1373064
-Node: Miscellaneous Register Hooks1374729
-Node: Varargs1375640
-Node: Trampolines1382327
-Node: Library Calls1388370
-Node: Addressing Modes1393054
-Node: Anchored Addresses1414022
-Node: Condition Code1416665
-Node: CC0 Condition Codes1418992
-Node: MODE_CC Condition Codes1422238
-Node: Costs1428690
-Node: Scheduling1445152
-Node: Sections1464863
-Node: PIC1480561
-Node: Assembler Format1482620
-Node: File Framework1483758
-Ref: TARGET_HAVE_SWITCHABLE_BSS_SECTIONS1490690
-Node: Data Output1493960
-Node: Uninitialized Data1501729
-Node: Label Output1506740
-Node: Initialization1529696
-Node: Macros for Initialization1535657
-Node: Instruction Output1542376
-Node: Dispatch Tables1552999
-Node: Exception Region Output1557383
-Node: Alignment Output1564061
-Node: Debugging Info1568640
-Node: All Debuggers1569310
-Node: DBX Options1572165
-Node: DBX Hooks1577603
-Node: File Names and DBX1578912
-Node: SDB and DWARF1581024
-Node: VMS Debug1587096
-Node: Floating Point1587683
-Node: Mode Switching1591580
-Node: Target Attributes1595933
-Node: Emulated TLS1604391
-Node: MIPS Coprocessors1607781
-Node: PCH Target1608940
-Node: C++ ABI1610782
-Node: Named Address Spaces1615576
-Node: Misc1620510
-Ref: TARGET_SHIFT_TRUNCATION_MASK1627252
-Node: Host Config1677776
-Node: Host Common1678844
-Node: Filesystem1681218
-Node: Host Misc1685333
-Node: Fragments1687782
-Node: Target Fragment1688977
-Node: Host Fragment1699605
-Node: Collect21699845
-Node: Header Dirs1702481
-Node: Type Information1703904
-Node: GTY Options1707180
-Node: Inheritance and GTY1720626
-Ref: Inheritance and GTY-Footnote-11722189
-Node: User GC1722459
-Node: GGC Roots1726198
-Node: Files1726911
-Node: Invoking the garbage collector1729618
-Node: Troubleshooting1731123
-Node: Plugins1732198
-Node: Plugins loading1733316
-Node: Plugin API1734186
-Node: Plugins pass1741849
-Node: Plugins GC1743820
-Node: Plugins description1745485
-Node: Plugins attr1746021
-Node: Plugins recording1748295
-Node: Plugins gate1749145
-Node: Plugins tracking1749736
-Node: Plugins building1750324
-Node: LTO1752114
-Node: LTO Overview1752975
-Node: LTO object file layout1758807
-Node: IPA1763437
-Node: WHOPR1772402
-Node: Internal flags1777091
-Node: Funding1778502
-Node: GNU Project1780986
-Node: Copying1781635
-Node: GNU Free Documentation License1819147
-Node: Contributors1844268
-Node: Option Index1882140
-Node: Concept Index1883017
+Node: Target Structure1150661
+Node: Driver1152777
+Node: Run-time Target1171589
+Node: Per-Function Data1181300
+Node: Storage Layout1184064
+Node: Type Layout1210300
+Node: Registers1225623
+Node: Register Basics1226597
+Node: Allocation Order1232035
+Node: Values in Registers1234519
+Node: Leaf Functions1241997
+Node: Stack Registers1244856
+Node: Register Classes1246128
+Node: Stack and Calling1277074
+Node: Frame Layout1277640
+Node: Exception Handling1288514
+Node: Stack Checking1294724
+Node: Frame Registers1299536
+Node: Elimination1307793
+Node: Stack Arguments1312021
+Node: Register Arguments1318882
+Node: Scalar Return1339181
+Node: Aggregate Return1345266
+Node: Caller Saves1349475
+Node: Function Entry1350650
+Node: Profiling1361742
+Node: Tail Calls1363852
+Node: Stack Smashing Protection1365753
+Node: Miscellaneous Register Hooks1367416
+Node: Varargs1368325
+Node: Trampolines1375012
+Node: Library Calls1381055
+Node: Addressing Modes1385739
+Node: Anchored Addresses1406707
+Node: Condition Code1409350
+Node: CC0 Condition Codes1411677
+Node: MODE_CC Condition Codes1414923
+Node: Costs1421375
+Node: Scheduling1437837
+Node: Sections1457548
+Node: PIC1473246
+Node: Assembler Format1475305
+Node: File Framework1476443
+Ref: TARGET_HAVE_SWITCHABLE_BSS_SECTIONS1483375
+Node: Data Output1486645
+Node: Uninitialized Data1494414
+Node: Label Output1499425
+Node: Initialization1522381
+Node: Macros for Initialization1528342
+Node: Instruction Output1535061
+Node: Dispatch Tables1545684
+Node: Exception Region Output1550068
+Node: Alignment Output1556746
+Node: Debugging Info1561325
+Node: All Debuggers1561995
+Node: DBX Options1564850
+Node: DBX Hooks1570288
+Node: File Names and DBX1571597
+Node: SDB and DWARF1573709
+Node: VMS Debug1579781
+Node: Floating Point1580368
+Node: Mode Switching1584265
+Node: Target Attributes1588618
+Node: Emulated TLS1597076
+Node: MIPS Coprocessors1600466
+Node: PCH Target1601625
+Node: C++ ABI1603467
+Node: Named Address Spaces1608261
+Node: Misc1613195
+Ref: TARGET_SHIFT_TRUNCATION_MASK1619937
+Node: Host Config1670461
+Node: Host Common1671529
+Node: Filesystem1673903
+Node: Host Misc1678018
+Node: Fragments1680467
+Node: Target Fragment1681662
+Node: Host Fragment1692290
+Node: Collect21692530
+Node: Header Dirs1695166
+Node: Type Information1696589
+Node: GTY Options1699865
+Node: Inheritance and GTY1713311
+Ref: Inheritance and GTY-Footnote-11714874
+Node: User GC1715144
+Node: GGC Roots1718883
+Node: Files1719596
+Node: Invoking the garbage collector1722303
+Node: Troubleshooting1723808
+Node: Plugins1724883
+Node: Plugins loading1726001
+Node: Plugin API1726871
+Node: Plugins pass1734534
+Node: Plugins GC1736505
+Node: Plugins description1738170
+Node: Plugins attr1738706
+Node: Plugins recording1740980
+Node: Plugins gate1741830
+Node: Plugins tracking1742421
+Node: Plugins building1743009
+Node: LTO1744799
+Node: LTO Overview1745660
+Node: LTO object file layout1751492
+Node: IPA1756122
+Node: WHOPR1765087
+Node: Internal flags1769776
+Node: Funding1771187
+Node: GNU Project1773671
+Node: Copying1774320
+Node: GNU Free Documentation License1811832
+Node: Contributors1836953
+Node: Option Index1874825
+Node: Concept Index1875702
 
 End Tag Table

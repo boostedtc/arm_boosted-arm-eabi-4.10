@@ -1681,6 +1681,12 @@
 #endif
 
 
+/* Define if int64_t uses long as underlying type. */
+#ifndef USED_FOR_TARGET
+#define INT64_T_IS_LONG 1
+#endif
+
+
 /* Define to the linker option to ignore unused dependencies. */
 #ifndef USED_FOR_TARGET
 #define LD_AS_NEEDED_OPTION "--as-needed"
@@ -1861,10 +1867,6 @@
 /* #undef USE_CYGWIN_LIBSTDCXX_WRAPPERS */
 #endif
 
-/* Define if your system supports PT_GNU_EH_FRAME for static executable. */
-#ifndef USED_FOR_TARGET
-/* #undef USE_EH_FRAME_HDR_FOR_STATIC */
-#endif
 
 /* Define to 1 if the 'long long' type is wider than 'long' but still
    efficiently supported by the host hardware. */

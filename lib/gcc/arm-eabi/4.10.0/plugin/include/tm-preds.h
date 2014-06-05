@@ -12,6 +12,7 @@ extern int pmode_register_operand (rtx, enum machine_mode);
 extern int scratch_operand (rtx, enum machine_mode);
 extern int immediate_operand (rtx, enum machine_mode);
 extern int const_int_operand (rtx, enum machine_mode);
+extern int const_scalar_int_operand (rtx, enum machine_mode);
 extern int const_double_operand (rtx, enum machine_mode);
 extern int nonimmediate_operand (rtx, enum machine_mode);
 extern int nonmemory_operand (rtx, enum machine_mode);
